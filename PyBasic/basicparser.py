@@ -18,12 +18,15 @@
 from basictoken import BASICToken as Token
 from flowsignal import FlowSignal
 from sys import implementation
-from time import localtime,sleep
+from time import sleep
 import math
 import random
+from pydos_ui import PyDOS_UI
 if implementation.name.upper() == 'MICROPYTHON':
     from machine import Pin, PWM
+    from time import ticks_ms as monotonic
 elif implementation.name.upper() == 'CIRCUITPYTHON':
+    from time import monotonic
     from pwmio import PWMOut
     foundPin = True
     try:
@@ -40,6 +43,7 @@ elif implementation.name.upper() == 'CIRCUITPYTHON':
             foundPin = False
 else:
     import winsound
+    from time import monotonic
 import gc
 gc.collect()
 #if implementation.name.upper() == 'MICROPYTHON':
@@ -91,7 +95,7 @@ statement when supplied.
 """
 class BASICParser:
 
-    def __init__(self):
+    def __init__(self,ui):
         # Symbol table to hold variable names mapped
         # to values
         self.__symbol_table = {}
@@ -120,6 +124,8 @@ class BASICParser:
 
         if implementation.name.upper() == 'MICROPYTHON':
             self.__pwm = PWM(Pin(19))
+
+        self.__ui = ui
 
 
     def parse(self, tokenlist, line_number, cstmt_number, infile, tmpfile, datastmts):
@@ -737,7 +743,7 @@ class BASICParser:
                         #'MICROPYTHON' else -1)].split(',', (len(variables)-1))
             inputvals = ((self.__file_handles[filenum].readline().replace("\n","")).replace("\r","")).split(',', (len(variables)-1))
         else:
-            inputvals = input(prompt).split(',', (len(variables)-1))
+            inputvals = self.__ui.input_keyboard(prompt).split(',', (len(variables)-1))
 
         for variable in variables:
             left = variable
@@ -1667,6 +1673,6 @@ class BASICParser:
             self.__expr()  # Process the seed
             seed = self.__operand_stack.pop()
         else:
-            seed = localtime()[2]*1000000+localtime()[3]*10000+localtime()[4]*100+localtime()[5]
+            seed = int(monotonic())
 
         random.seed(seed)

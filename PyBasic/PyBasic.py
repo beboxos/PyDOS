@@ -28,27 +28,31 @@ from lexer import Lexer
 from program import Program
 from sys import stderr,implementation
 from os import listdir,rename,remove
+from pydos_ui import PyDOS_UI
 import gc
-gc.collect()
-if implementation.name.upper() == 'MICROPYTHON':
-    gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
 if implementation.name.upper() == 'MICROPYTHON':
     from sys import print_exception
 
+gc.collect()
+if implementation.name.upper() == 'MICROPYTHON':
+    gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+
+
 def main():
 
+    global pydos_ui
 
     banner = (
-        """
-        PPPP   Y   Y  BBBB    AAA    SSSS    I     CCC
-        P   P   Y Y   B   B  A   A  S        I    C
-        P   P   Y Y   B   B  A   A  S        I    C
-        PPPP     Y    BBBB   AAAAA  SSSS     I    C
-        P        Y    B   B  A   A      S    I    C
-        P        Y    B   B  A   A      S    I    C
-        P        Y    BBBB   A   A  SSSS     I     CCC
-        """)
+   """
+   PPPP   Y   Y  BBBB    AAA    SSSS    I     CCC
+   P   P   Y Y   B   B  A   A  S        I    C
+   P   P   Y Y   B   B  A   A  S        I    C
+   PPPP     Y    BBBB   AAAAA  SSSS     I    C
+   P        Y    B   B  A   A      S    I    C
+   P        Y    B   B  A   A      S    I    C
+   P        Y    BBBB   A   A  SSSS     I     CCC
+   """)
 
     print(banner)
 
@@ -76,13 +80,13 @@ def main():
 
     if passedIn != "":
         infile = program.load(passedIn,tmpfile)
-        program.execute(infile,tmpfile)
+        program.execute(infile,tmpfile,pydos_ui)
 
     # Continuously accept user input and act on it until
     # the user enters 'EXIT'
     while True:
 
-        stmt = input(': ')
+        stmt = pydos_ui.input_keyboard(': ')
 
         try:
         #if True:
@@ -125,7 +129,7 @@ def main():
                 # Execute the program
                 elif tokenlist[0].category == Token.RUN:
                     try:
-                        program.execute(infile,tmpfile)
+                        program.execute(infile,tmpfile,pydos_ui)
 
                     except KeyboardInterrupt:
                         print("Program terminated")
@@ -155,7 +159,7 @@ def main():
                         else:
                             filename = tokenlist[1].lexeme
 
-                        if program.save(filename,infile,tmpfile):
+                        if program.save(filename,infile,tmpfile,pydos_ui):
                             # Since we are running the program from the disk file "in place"
                             # the current program listing is contained only on disk in the
                             # loaded file (if one has been loaded) and the _pYbTmp.tmp working file
@@ -184,7 +188,7 @@ def main():
                                 if tokenlist[1].lexeme.split(".")[-1].upper() == "PGM":
 
                                     filename = tokenlist[1].lexeme
-                                    if program.save(filename,infile,tmpfile):
+                                    if program.save(filename,infile,tmpfile,pydos_ui):
 
                                         if filename in listdir():
                                             remove(filename)

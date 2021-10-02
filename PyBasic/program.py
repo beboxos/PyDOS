@@ -29,6 +29,7 @@ from lexer import Lexer
 import gc
 from os import listdir,remove
 from sys import implementation
+from pydos_ui import PyDOS_UI
 gc.collect()
 
 class Program:
@@ -67,7 +68,7 @@ class Program:
 
                 print()
 
-    def save(self, file, infile, tmpfile):
+    def save(self, file, infile, tmpfile, pydos_ui):
         """Save the program
 
         :param file: The name and path of the save file
@@ -77,7 +78,7 @@ class Program:
 
         ans = "Y"
         if file in listdir():
-            ans = input("Overwrite "+file+" (y/n): ").upper()
+            ans = pydos_ui.input_keyboard("Overwrite "+file+" (y/n): ").upper()
 
         if ans == "Y":
 
@@ -272,10 +273,10 @@ class Program:
         return tmp_flow
 
 
-    def execute(self,infile,tmpfile):
+    def execute(self,infile,tmpfile,ui):
         """Execute the program"""
 
-        self.__parser = BASICParser()
+        self.__parser = BASICParser(ui)
 
         self.__data.restore(0) # reset data pointer
 
