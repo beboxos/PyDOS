@@ -5,8 +5,10 @@
 
 import os
 import sys
+from pydos_ui import PyDOS_UI
 
-text = []
+global pydos_ui
+
 loaded = []
 autosave = False
 filename = ""
@@ -44,17 +46,17 @@ def chkPath(tstPath):
     return(validPath)
 
 def open_text(name):
-    global text
+    #global text
 
     if name == "":
-        name = input("Enter file name: ")
+        name = pydos_ui.input_keyboard("Enter file name: ")
 
     aPath = name.split("/")
     newdir = aPath.pop(-1)
 
+    text = []
     if chkPath(aPath) and newdir in os.listdir(name[0:len(name)-len(newdir)]) and os.stat(name)[0] & (2**15) != 0:
         f = open(name, "rU")
-        text[:] = []
 
         for line in f:
             text.append(line.replace("\n",""))
@@ -64,9 +66,9 @@ def open_text(name):
         print("Unable to open: "+name+". File not found.")
         name = ""
 
-    return(name)
+    return(name,text)
 
-def proc_text(lineNum,func,strt,end):
+def proc_text(lineNum,func,strt,end,text):
     if len(text) > 0:
         x = min(max(0,strt),len(text)-1)
         popIndx = x
@@ -84,11 +86,11 @@ def proc_text(lineNum,func,strt,end):
                 lineNum = popIndx
             x+=1
 
-    return(lineNum)
+    return(lineNum,text)
 
-def save_text(name):
+def save_text(name,text):
     if name == "":
-        name = input("Enter file name: ")
+        name = pydos_ui.input_keyboard("Enter file name: ")
 
     f = open(name, "w")
 
@@ -151,8 +153,8 @@ def parseInput(command):
     cmdList.insert(0,cmd)
     return cmdList
 
-def interperit(command):
-    global text
+def interperit(command,text):
+    #global text
     global filename
     global autosave
     global lineNum
@@ -168,21 +170,21 @@ def interperit(command):
 
     if command_list[0] == "O":
         if parseMap == "C+":
-            filename = open_text(command_list[1])
+            (filename,text) = open_text(command_list[1])
         else:
-            filename = open_text(filename)
+            (filename,text) = open_text(filename)
 
     elif command_list[0] == "W":
         if parseMap == "C+":
-            filename = save_text(command_list[1])
+            filename = save_text(command_list[1],text)
         else:
-            filename = save_text(filename)
+            filename = save_text(filename,text)
 
     elif command_list[0] == "E":
         if parseMap == "C+":
-            filename = save_text(command_list[1])
+            filename = save_text(command_list[1],text)
         else:
-            filename = save_text(filename)
+            filename = save_text(filename,text)
         loop = False
 
     elif command_list[0] == "Q":
@@ -198,9 +200,9 @@ def interperit(command):
 
     elif command_list[0] == "new":
         if len(command_list) > 1:
-            filename = save_text(command_list[1][1:])
+            filename = save_text(command_list[1][1:],text)
         else:
-            filename = save_text(filename)
+            filename = save_text(filename,text)
 
         text[:] = []
 
@@ -222,28 +224,28 @@ def interperit(command):
 
     elif command_list[0] == "L" or command_list[0] == "D":
         if parseMap == "C-":
-            lineNum = proc_text(lineNum,command_list[0],int(command_list[1]),int(command_list[1]))
+            (lineNum,text) = proc_text(lineNum,command_list[0],int(command_list[1]),int(command_list[1]),text)
         elif parseMap == "C--":
-            lineNum = proc_text(lineNum,command_list[0],int(command_list[1]),int(command_list[2]))
+            (lineNum,text) = proc_text(lineNum,command_list[0],int(command_list[1]),int(command_list[2]),text)
         elif parseMap == "C":
-            lineNum = proc_text(lineNum,command_list[0],0,len(text)-1)
+            (lineNum,text) = proc_text(lineNum,command_list[0],0,len(text)-1,text)
         else:
             print("* Wrong command format. use: [#][,#]"+command_list[0].lower())
 
     elif command_list[0] == "I":
         if parseMap == "C-":
-            text.insert(int(command_list[1]), input("."))
+            text.insert(int(command_list[1]), pydos_ui.input_keyboard("."))
         elif parseMap == "C":
-            text.insert(lineNum, input("."))
+            text.insert(lineNum, pydos_ui.input_keyboard("."))
         else:
             print("* Wrong command format. use: [#]i")
 
     elif command_list[0] == "A":
         if parseMap == "C":
-            text.append(input("."))
+            text.append(pydos_ui.input_keyboard("."))
         elif parseMap == "C-":
             for a in range(0, int(command_list[1])):
-                text.append(input("."))
+                text.append(pydos_ui.input_keyboard("."))
         elif parseMap == "C+" or parseMap == "C-+":
             strngs = command_list[-1].strip()
             if strngs.count(strngs[0]) !=2:
@@ -303,7 +305,7 @@ def interperit(command):
                 for b in range(strt, end+1):
                     if confirmCmd:
                         print(text[b].replace(token[0], token[1]))
-                        if input("Confirm change (y/n): ")[0].upper() == "Y":
+                        if pydos_ui.input_keyboard("Confirm change (y/n): ")[0].upper() == "Y":
                             text[b] = text[b].replace(token[0], token[1])
                     else:
                         text[b] = text[b].replace(token[0], token[1])
@@ -332,11 +334,11 @@ def interperit(command):
                 for b in range(strt, end+1):
                     if text[b].count(strngs) > 0:
                         lineNum = b
-                        proc_text(lineNum,"L",b,b)
+                        proc_text(lineNum,"L",b,b,text)
                         if not confirmCmd:
                             break
                         else:
-                            if input("Confirm find (y/n): ")[0].upper() == "Y":
+                            if pydos_ui.input_keyboard("Confirm find (y/n): ")[0].upper() == "Y":
                                 break
 
     elif command_list[0] == "load":
@@ -350,8 +352,8 @@ def interperit(command):
     elif command_list[0] in "*#":
         if command_list[0] == "*":
             lineNum = min(len(text)-1,max(0,command_list[1]))
-        proc_text(lineNum,"L",lineNum,lineNum)
-        strngs = input(".")
+        proc_text(lineNum,"L",lineNum,lineNum,text)
+        strngs = pydos_ui.input_keyboard(".")
         if strngs != "":
             text.insert(lineNum,strngs)
             if lineNum < len(text)-1:
@@ -361,34 +363,35 @@ def interperit(command):
             lineNum += 1
 
     elif command_list[0] in loaded:
-        save_text("text.temp")
+        save_text("text.temp",text)
         args = " ".join(command_list[1:])
         os.system(".\\" + command_list[0] + ".py " + args)
         open("text.temp")
         os.remove("text.temp")
 
-    return(loop)
+    return(loop,text)
 
 def main(passedIn):
     global filename
-    global text
+    #global text
     global autosave
     global lineNum
     global parseMap
 
+    text = []
 
     if passedIn != "":
-        filename = open_text(passedIn)
+        (filename,text) = open_text(passedIn)
 
     print("h for command list")
 
     loop = True
     while loop:
-        loop = interperit(input(filename+": "))
+        (loop,text) = interperit(pydos_ui.input_keyboard(filename+": "),text)
         #if autosave:
             #filename = save_text()
 
-    del text
+    #del text
     del filename
     del autosave
     del lineNum

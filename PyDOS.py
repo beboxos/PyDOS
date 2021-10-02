@@ -1,32 +1,37 @@
 import os
 from time import localtime
 from sys import implementation
+from pydos_ui import PyDOS_UI
 import gc
-gc.collect()
 if implementation.name.upper() == "MICROPYTHON":
     from sys import stdin
     from micropython import mem_info
     import uselect
+    gc.collect()
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+else:
+    gc.collect()
+
 
 def PyDOS():
 
-    global envVars
+    global envVars,pydos_ui
 
     envVars = {}
-    envVars["_scrWidth"] = 80
-    envVars["_scrHeight"] = 24
+    envVars["_scrWidth"] = 49
+    envVars["_scrHeight"] = 17
 
+    pydos_ui = PyDOS_UI()
+
+    wildcardLen = 65
     if implementation.name.upper() == "MICROPYTHON":
         wildcardLen = 16
-    else:
-        wildcardLen = 65
 
     def anyKey():
 
         if implementation.name.upper() == "CIRCUITPYTHON":
 
-            keyIn = input("Press enter to continue . . . .")
+            keyIn = pydos_ui.input_keyboard("Press enter to continue . . . .")
 
         else:
 
@@ -489,7 +494,7 @@ def PyDOS():
                     cmdLine = cmdLine[1:]
 
             if not activeBAT:
-                cmdLine = input("\n("+str(gc.mem_free())+") "+os.getcwd()+">")
+                cmdLine = pydos_ui.input_keyboard("\n("+str(gc.mem_free())+") "+os.getcwd()+">")
 
         cmdLine = cmdLine.strip()
 
@@ -585,7 +590,7 @@ def PyDOS():
                         break
 
         elif cmd == "VER":
-            print("PyDOS [Version 0.84c]")
+            print("PyDOS [Version 0.85c (kfw)]")
 
         elif cmd == "ECHO":
             if len(args) == 1:
@@ -753,7 +758,7 @@ def PyDOS():
                         except:
                             envVars[envCmdVar] = "0"
                     elif switches[0] == "P":
-                        tmp = input("=".join(envCmd).strip()+" ")
+                        tmp = pydos_ui.input_keyboard("=".join(envCmd).strip()+" ")
                     else:
                         print("Illeagal switch:","/".join(switches),"Command Format: SET[/a|/p] [variable = [string|expression]]")
 
@@ -826,7 +831,7 @@ def PyDOS():
                     if "*" in newdir or "?" in newdir:
                         ans = "Y"
                         if newdir == "*" or newdir == "*.*":
-                            ans = input(tmpDir+newdir+", Are you sure (y/n)? ").upper()
+                            ans = pydos_ui.input_keyboard(tmpDir+newdir+", Are you sure (y/n)? ").upper()
 
                         if ans == "Y":
                             for dir in os.listdir(tmpDir[:(-1 if tmpDir != "/" else None)]):
@@ -1031,7 +1036,7 @@ def PyDOS():
                                 elif sourcePath == targetPath and newdir == newdir2:
                                     print("The file cannot be copied onto itself")
 
-                                elif input("Overwrite "+args[2]+"? (y/n): ").upper() == "Y":
+                                elif pydos_ui.input_keyboard("Overwrite "+args[2]+"? (y/n): ").upper() == "Y":
                                     os.remove(targetPath+("/" if targetPath[-1] != "/" else "")+newdir2)
                                     filecpy(sourcePath+("/" if sourcePath[-1] != "/" else "")+newdir,targetPath+("/" if targetPath[-1] != "/" else "")+newdir2)
                                     nFiles += 1
@@ -1054,7 +1059,7 @@ def PyDOS():
                                                     break
                                                 else:
                                                     if ans != "A":
-                                                        ans = input("Overwrite "+targetPath+newdir2+("" if newdir2 == "" else "/")+dir+"? (y/n/(q)uit/(a)ll): ").upper()
+                                                        ans = pydos_ui.input_keyboard("Overwrite "+targetPath+newdir2+("" if newdir2 == "" else "/")+dir+"? (y/n/(q)uit/(a)ll): ").upper()
                                                     if ans  == "Y" or ans == "A":
                                                         filecpy(sourcePath+dir,targetPath+newdir2+("" if newdir2 == "" else "/")+dir)
                                                         nFiles += 1
@@ -1068,7 +1073,7 @@ def PyDOS():
                                 elif newdir in os.listdir(targetPath+newdir2):
                                     if sourcePath == targetPath+newdir2+("" if newdir2 == "" else "/"):
                                         print("The file cannot be copied onto itself")
-                                    elif input("Overwrite "+targetPath+newdir2+("" if newdir2 == "" else "/")+newdir+"? (y/n): ").upper() == "Y":
+                                    elif pydos_ui.input_keyboard("Overwrite "+targetPath+newdir2+("" if newdir2 == "" else "/")+newdir+"? (y/n): ").upper() == "Y":
                                         os.remove(targetPath+newdir2+("" if newdir2 == "" else "/")+newdir)
                                         filecpy(sourcePath+newdir,targetPath+newdir2+("" if newdir2 == "" else "/")+newdir)
                                         nFiles += 1
