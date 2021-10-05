@@ -493,7 +493,7 @@ def PyDOS():
                 elif cmdLine[0] == "@":
                     cmdLine = cmdLine[1:]
 
-            if not activeBAT:
+            else:
                 cmdLine = pydos_ui.input_keyboard("\n("+str(gc.mem_free())+") "+os.getcwd()+">")
 
         cmdLine = cmdLine.strip()
