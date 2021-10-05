@@ -9,7 +9,8 @@
         Pressing Alt-Space will enable Caps Lock or Alt Lock depending on the Alt-Enter toggle state
         Using a shift key when Caps Lock is on returns the lower case character
         Pressing the Microphone symbol returns a left bracket ([)
-        Using the 2 second Shift on the Microphone Symbol returns a right bracket (])
+        Using the 2 second Shift or Shift Lock on the Microphone Symbol returns a right bracket (])
+        Using the 2 second Shift or Shift Lock on the dollar sign ($) returns the percent symbal (%)
         Pressing the F3 key will return the last entered line
         Pressing the F2 and then pressing a key will return the last entered line up to the first instance of that key
 
@@ -64,6 +65,8 @@ class PyDOS_UI:
         elif self.__shift_Mode == self.__SHIFT:
             if key == '~':
                 retVal = ']'
+            elif key == '$':
+                retVal = '%'
             else:
                 if key != key.upper():
                     retVal = key.upper()
